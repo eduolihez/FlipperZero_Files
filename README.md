@@ -1,2 +1,1 @@
-# FlipperZero_Files
- FlipperZero | KeyLogger | Stealer | Passwords 
+js scripts and files I use in my FlipperZero
